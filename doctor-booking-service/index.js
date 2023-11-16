@@ -12,18 +12,12 @@ app.get("/healthcare/doctor/:doctorType", async (req, res) => {
     console.log("GET /healthcare/doctor/" + req.params.doctorType);
 
     const doctorType = req.params.doctorType;
-    const response = [];
 
     try {
-        // Get data from grandOak
-        console.log("Retrieving data from GrandOak")
-        const grandOakResponse = await fetch(GO_URL + "/grandOak/doctors/" + doctorType);
-        const grandOakResponseJson = await grandOakResponse.json();
-        response.push(grandOakResponseJson["doctors"]["doctor"])
-
-        // Get data from pineValley
-        console.log("Retrieving data from PineValley")
-        const pineValleyResponse = await fetch(PV_URL + "/pineValley/doctors",
+        // Requests to hospital services
+        const promises = [
+            fetch(GO_URL + "/grandOak/doctors/" + doctorType),
+            fetch(PV_URL + "/pineValley/doctors",
             {
                 method: "POST",
                 headers: {
@@ -36,9 +30,27 @@ app.get("/healthcare/doctor/:doctorType", async (req, res) => {
                     }
                 )
             }
-        );
-        const pineValleyResponseJson = await pineValleyResponse.json();
-        response.push(pineValleyResponseJson["doctors"]["doctor"])
+            )
+        ];
+        const responses = await Promise.allSettled(promises);
+        const jsonPromises = []
+
+        responses.forEach((result) => {
+            if (result.status == "fulfilled") {
+                jsonPromises.push(result.value.json());
+            }
+        });
+
+        // Process json
+        const doctors = [];
+        const jsonResponses = await Promise.allSettled(jsonPromises);
+
+        jsonResponses.forEach((result) => {
+            doctors.push(result["value"]["doctors"]["doctor"]);
+        })
+
+        console.log(doctors);
+        res.status(200).json(doctors);
     } catch (e) {
         console.log(e);
         res.status(500).json(
@@ -48,9 +60,6 @@ app.get("/healthcare/doctor/:doctorType", async (req, res) => {
         )
         return
     }
-
-
-    return res.json(response)
 });
 
 app.listen(PORT, () => {
