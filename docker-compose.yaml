@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:      
+  booking:
+    build:
+      context: ./doctor-booking-service
+    container_name: booking
+    ports: 
+      - "3000:3000"
+    command: npm start
+    environment:
+      - GO_URL=http://grandoak:9091
+      - PV_URL=http://pinevalley:9091
+    networks:
+      - booking
+  grandoak:
+    build: 
+      context: ./hospital-service
+    container_name: grandOak
+    networks:
+      - booking
+  pinevalley:
+    build: 
+      context: ./hospital-service
+    container_name: pineValley
+    networks:
+      - booking
+     
+networks:
+  booking:
+    driver: bridge

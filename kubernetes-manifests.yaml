@@ -1,0 +1,117 @@
+# Doctor Booking Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking
+spec:
+  selector:
+    matchLabels:
+      app: booking
+  template:
+    metadata:
+      labels:
+        app: booking
+    spec:
+      containers:
+      - name: server
+        image: ignferry/doctor-booking-service:latest
+        env:
+        - name: GO_URL
+          value: "http://grandoak:9091"
+        - name: PV_URL
+          value: "http://pinevalley:9091"
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking
+spec:
+  selector:
+    app: booking
+  ports:
+  - port: 3000
+    targetPort: 3000
+    name: http
+
+
+# Grand Oak Hospital Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grandoak
+spec:
+  selector:
+    matchLabels:
+      app: grandoak
+  template:
+    metadata:
+      labels:
+        app: grandoak
+    spec:
+      containers:
+      - name: server
+        image: ignferry/hospital-service:latest
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        ports:
+        - containerPort: 9091
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grandoak
+spec:
+  selector:
+    app: grandoak
+  ports:
+  - port: 9091
+    targetPort: 9091
+    name: http
+
+# Pine Valley Hospital Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pinevalley
+spec:
+  selector:
+    matchLabels:
+      app: pinevalley
+  template:
+    metadata:
+      labels:
+        app: pinevalley
+    spec:
+      containers:
+      - name: server
+        image: ignferry/pine-valley-service:latest
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        ports:
+        - containerPort: 9091
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinevalley
+spec:
+  selector:
+    app: pinevalley
+  ports:
+  - port: 9091
+    targetPort: 9091
+    name: http
+
